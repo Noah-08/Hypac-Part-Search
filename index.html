@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hypac Part Searcher</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: var(--background-image) center center/cover no-repeat;
+      background-blend-mode: overlay;
+      filter: brightness(0.4) blur(6px);
+    }
+
+    #logo {
+      position: absolute;
+      top: 650px;
+      left: 1100px;
+      width: 300px;
+      height: auto;
+      z-index: 10;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    #main-container {
+      position: relative;
+      top: 40vh;
+      text-align: center;
+      transition: top 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+      z-index: 1;
+    }
+
+    #main-container.moved-up {
+      top: 30px;
+    }
+
+    #title {
+      font-size: 2.5em;
+      color: #e4572e;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+
+    #searchForm {
+      display: inline-block;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    #searchForm input {
+      padding: 14px 20px;
+      font-size: 1.2em;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      width: 300px;
+      max-width: 80%;
+      transition: border-color 0.3s;
+    }
+
+    #searchForm input:focus {
+      border-color: #e4572e;
+      outline: none;
+    }
+
+    #searchForm button {
+      padding: 14px 24px;
+      font-size: 1.2em;
+      background-color: #e4572e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      margin-left: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    #searchForm button:hover {
+      background-color: #d1461e;
+      transform: scale(1.05);
+    }
+
+    #results {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    figure {
+      display: inline-block;
+      margin: 20px;
+      max-width: 300px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 15px;
+      transition: transform 0.3s;
+    }
+
+    figure:hover {
+      transform: translateY(-5px);
+    }
+
+    img.part-image {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    figcaption {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #333;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <img src="gif/hypacgif.gif" alt="Hypac Logo" id="logo" />
+
+  <div id="main-container">
+    <h1 id="title">HYPAC PART SEARCH</h1>
+    <form id="searchForm">
+      <input type="text" id="searchInput" placeholder="Enter part number..." />
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  <div id="results"></div>
+
+  <script>
+    const backgrounds = [
+      "url('backgrounds/BG1.jpg')",
+      "url('backgrounds/BG2.jpg')"
+    ];
+    const chosenBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.setProperty('--background-image', chosenBackground);
+
+    const imageMap = {
+      "41a232938abp1": [
+        {
+          filename: "images/41A232938ABP1 - GASKET,SUN PINION COVER,13IN OD.png",
+          caption: "GASKET, SUN PINION COVER, 13IN OD",
+          description: "Front View"
+        },
+        {
+          filename: "images/41A232938ABP1 - GASKET,SUN PINION COVER,13IN OD - 2.png",
+          caption: "GASKET, SUN PINION COVER, 13IN OD",
+          description: "Back View"
+        }
+      ],
+      "41a238996p1am": [
+        {
+          filename: "images/41A238996P1AM - SEAL,FELT,48.55IN ID.png",
+          caption: "SEAL, FELT, 48.55IN ID",
+          description: "Side View"
+        }
+      ],
+      "41a238997p2": [
+        {
+          filename: "images/41A238997P2 - WEAR BAND, 37.325 IN ID.png",
+          caption: "WEAR BAND, 37.325 IN ID"
+        }
+      ],
+      "41b531649g2": [
+        {
+          filename: "images/41B531649G2 - HOLDER,BRUSH.png",
+          caption: "HOLDER,BRUSH",
+          description: "Top View"
+        },
+        {
+          filename: "images/41B531649G2 - HOLDER,BRUSH - 2.png",
+          caption: "HOLDER,BRUSH",
+          description: "Angled View"
+        }
+      ],
+      "41b538384g8am": [
+        {
+          filename: "images/41B538384G8AM - CABLE ASSEMBLY,F1,W_ GLAND.png",
+          caption: "CABLE ASSEMBLY,F1,W_ GLAND"
+        }
+      ],
+      "41b5306558g1am": [
+        {
+          filename: "images/41B5306558G1AM - HOLDER,BRUSH.png",
+          caption: "HOLDER,BRUSH",
+          description: "Side View"
+        },
+        {
+          filename: "images/41B5306558G1AM - HOLDER,BRUSH - 2.png",
+          caption: "HOLDER,BRUSH",
+          description: "Top View"
+        }
+      ],
+      "41c633216p4": [
+        {
+          filename: "images/41C633216P4 - STRAP,TERMINAL CONNECTION.png",
+          caption: "STRAP,TERMINAL CONNECTION",
+          description: "Package View"
+        },
+        {
+          filename: "images/41C633216P4 - STRAP,TERMINAL CONNECTION - 2.png",
+          caption: "STRAP,TERMINAL CONNECTION",
+          description: "Top View"
+        },
+        {
+          filename: "images/41C633216P4 - STRAP,TERMINAL CONNECTION - 3.png",
+          caption: "STRAP,TERMINAL CONNECTION",
+          description: "Back View"
+        }
+      ],
+      "84c603620p1": [
+        {
+          filename: "images/84C603620P1 - PGS ASSEMBLY.png",
+          caption: "PGS ASSEMBLY"
+        }
+      ],
+      "84c620937p2am": [
+        {
+          filename: "images/84C620937P2AM - GASKET.png",
+          caption: "GASKET"
+        }
+      ],
+      "84d706978p1": [
+        {
+          filename: "images/84D706978P1 - PARKING BRAKE ADAPTER.png",
+          caption: "PARKING BRAKE ADAPTER",
+          description: "View 1"
+        },
+        {
+          filename: "images/84D706978P1 - PARKING BRAKE ADAPTER - 2.png",
+          caption: "PARKING BRAKE ADAPTER",
+          description: "View 2"
+        }
+      ],
+      "84d7303117p1": [
+        {
+          filename: "images/84D7303117P1 - RING GEAR, TORQUE TUBE.png",
+          caption: "RING GEAR, TORQUE TUBE",
+        }
+      ],
+      "468-2778": [
+        {
+          filename: "images/468-2778 - STUD,WHEEL WEDGE,1IN-14 UNS,7.5IN LG,CAT.png",
+          caption: "STUD,WHEEL WEDGE,1IN-14 UNS,7.5IN LG,CAT",
+          description: "Top View"
+        },
+        {
+          filename: "images/468-2778 - STUD,WHEEL WEDGE,1IN-14 UNS,7.5IN LG,CAT - 2.png",
+          caption: "STUD,WHEEL WEDGE,1IN-14 UNS,7.5IN LG,CAT",
+          description: "Side View"
+        }
+      ],
+      "473-0349": [
+        {
+          filename: "images/473-0349 - SHIM,KIT,SERVICE,6X 0.010IN.png",
+          caption: "SHIM,KIT,SERVICE,6X 0.010IN",
+        }
+      ],
+      "c1540": [
+        {
+          filename: "images/C1540 - LOCKWASHER.png",
+          caption: "LOCKWASHER",
+        }
+      ],
+      "c1645": [
+        {
+          filename: "images/C1645 - CAPSCREW,3_4IN,10NCX2 1_4IN.png",
+          caption: "CAPSCREW,3_4IN,10NCX2 1_4IN",
+        }
+      ],
+      "ef3368": [
+        {
+          filename: "images/EF3368 - FLAT WASHER HARDENED.png",
+          caption: "FLAT WASHER HARDENED",
+        }
+      ],
+      "ef3368": [
+        {
+          filename: "images/EH7197 - SEAl,O-RING.png",
+          caption: "FLAT WASHER HARDENED",
+        }
+      ],
+      "ej8807": [
+        {
+          filename: "images/EJ8807 - SHIM.png",
+          caption: "SHIM",
+        }
+      ],
+      "el9513": [
+        {
+          filename: "images/EL9513 - SHIM.png",
+          caption: "SHIM",
+        }
+      ],
+      "el9514": [
+        {
+          filename: "images/EL9514 - SHIM 0.21 IN.png",
+          caption: "SHIM 0.21 IN",
+        }
+      ],
+      "el9515": [
+        {
+          filename: "images/EL9515 - SHIM 0.04 IN.png",
+          caption: "SHIM 0.04 IN",
+        }
+      ],
+      "em5451am": [
+        {
+          filename: "images/EM5451AM - STUD,REAR,1-1_4-7UNCX10-13_16IN.png",
+          caption: "STUD,REAR,1-1_4-7UNCX10-13_16IN",
+        }
+      ],
+      "em5453": [
+        {
+          filename: "images/EM5453 - STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM.png",
+          caption: "STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM",
+          description: "Package View"
+        },
+        {
+          filename: "images/EM5453 - STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM -2.png",
+          caption: "STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM",
+          description: "Top View"
+        },
+        {
+          filename: "images/EM5453 - STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM - 3.png",
+          caption: "STUD,WHEEL WEDGE,1IN-14 UNS,6IN LG,KOM",
+          description: "Side View"
+        }
+      ],
+      "ge0068am": [
+        {
+          filename: "images/GE0068AM - BOLT,12 HEAD,1-1:4-12UNF X 5-1:2IN.png",
+          caption: "BOLT,12 HEAD,1-1:4-12UNF X 5-1:2IN",
+          description: "Top View"
+        },
+        {
+          filename: "images/GE0068AM - BOLT,12 HEAD,1-1:4-12UNF X 5-1:2IN - 2.png",
+          caption: "BOLT,12 HEAD,1-1:4-12UNF X 5-1:2IN",
+          description: "Front View"
+        }
+      ],
+      "ty2148": [
+        {
+          filename: "images/TY2148 - FLAT WASHER.png",
+          caption: "FLAT WASHER"
+        }
+      ], 
+      "ty2149": [
+        {
+          filename: "images/TY2149 - WASHER,HARDENED,1 1_4 INCH.png",
+          caption: "WASHER,HARDENED,1 1_4 INCH"
+        }
+      ], 
+      "ve4258": [
+        {
+          filename: "images/VE4258 - MOUNT.png",
+          caption: "VE4258 - MOUNT",
+          description: "Top View"
+        },
+        {
+          filename: "images/VE4258 - MOUNT - 2.png",
+          caption: "VE4258 - MOUNT",
+          description: "Bottom View"
+        }
+      ],
+      "vn3275": [
+        {
+          filename: "images/VN3275 - CAPSCREW 1.25-7UNC X 5.5.png",
+          caption: "CAPSCREW 1.25-7UNC X 5.5",
+          description: "Side View"
+        },
+        {
+          filename: "images/VN3275 - CAPSCREW 1.25-7UNC X 5.5 - 2.png",
+          caption: "CAPSCREW 1.25-7UNC X 5.5",
+          description: "Top View"
+        }
+      ],
+      "wa0362": [
+        {
+          filename: "images/WA0362 - WASHER, FLAT, 3_4IN, THK, BLK.png",
+          caption: "WASHER, FLAT, 3_4IN, THK, BLK"
+        }
+      ],
+      "wa0915": [
+        {
+          filename: "images/WA0915 - CAPSCREW,3_4IN,10NC X 3.25IN.png",
+          caption: "CAPSCREW,3_4IN,10NC X 3.25IN"
+        }
+      ],
+      "wa3574am": [
+        {
+          filename: "images/WA3574AM - SEAL,RING,OIL.png",
+          caption: "SEAL,RING,OIL"
+        }
+      ],
+      "wa5659am": [
+        {
+          filename: "images/WA5659AM - WASHER HARDENED.png",
+          caption: "WASHER HARDENED",
+          description: "Bottom View"
+        },
+        {
+          filename: "images/WA5659AM - WASHER HARDENED - 2.png",
+          caption: "WASHER HARDENED",
+          description: "Top View"
+        }
+      ],
+      "wb0505": [
+        {
+          filename: "images/WB0505 - FITTING,ELBOW,90 DEG.png",
+          caption: "FITTING,ELBOW,90 DEG"
+        }
+      ],
+      "xa0008": [
+        {
+          filename: "images/XA0008 - Brush posts.png",
+          caption: "Brush posts",
+          description: "View 1"
+        },
+        {
+          filename: "images/XA0008 - Brush posts - 2.png",
+          caption: "Brush posts",
+          description: "View 2"
+        }
+      ],
+      "xa3158": [
+        {
+          filename: "images/XA3158 - COVER,MAIN CONNECTION.png",
+          caption: "COVER,MAIN CONNECTION",
+          description: "Top View"
+        },
+        {
+          filename: "images/XA3158 - COVER,MAIN CONNECTION - 2.png",
+          caption: "COVER,MAIN CONNECTION",
+          description: "Side View"
+        }
+      ],
+      "xa5768": [
+        {
+          filename: "images/XA5768 - COLLAR,OUTBOARD.png",
+          caption: "COLLAR,OUTBOARD",
+          description: "View 1"
+        },
+        {
+          filename: "images/XA5768 - COLLAR,OUTBOARD - 2.png",
+          caption: "COLLAR,OUTBOARD",
+          description: "View 2"
+        },
+        {
+          filename: "images/XA5768 - COLLAR,OUTBOARD - 2.png",
+          caption: "COLLAR,OUTBOARD",
+          description: "View 3"
+        }
+      ],
+      "8864959P15am": [
+        {
+          filename: "images/8864959P15AM - NUT,LOCKING,BRIDGE.png",
+          caption: "NUT,LOCKING,BRIDGE",
+          description: "Top View"
+        },
+        {
+          filename: "images/8864959P15AM - NUT,LOCKING,BRIDGE - 2.png",
+          caption: "NUT,LOCKING,BRIDGE",
+          description: "Bottom View"
+        }
+      ],
+      "8864959P134am": [
+        {
+          filename: "images/8864959P134AM - LOCKWASHER.png",
+          caption: "LOCKWASHER",
+        }
+      ],
+      "n22p25016b13": [
+        {
+          filename: "images/N22P25016B13 - BOLT,HEX HD,3_8 IN-16,1 IN LONG.png",
+          caption: "BOLT,HEX HD,3_8 IN-16,1 IN LONG",
+        }
+      ],
+      "n22p29024b13": [
+        {
+          filename: "images/N22P29024B13 - BOLT,HEX HD,1_2 IN-13,1 1_2 IN LONG.png",
+          caption: "BOLT,HEX HD,1_2 IN-13,1 1_2 IN LONG",
+        }
+      ],
+      "n22p33036b13am": [
+        {
+          filename: "images/N22P33036B13AM - BOLT,HEX HD,5_8IN-11,2-1_4IN LG,G5,ZP.png",
+          caption: "BOLT,HEX HD,5_8IN-11,2-1_4IN LG,G5,ZP",
+        }
+      ],
+      "n22p33036b13am - BOLT,HEX HD,5_8IN-11,2-1_4IN": [
+        {
+          filename: "images/N22P33036B13AM - BOLT,HEX HD,5_8IN-11,2-1_4IN.png",
+          caption: "BOLT,HEX HD,5_8IN-11,2-1_4IN",
+        }
+      ],
+      "n170p33024": [
+        {
+          filename: "images/N170P33024 - SCREW,CAP,HX SKT 5_8IN-11,1-1_2IN LG,BLK.png",
+          caption: "SCREW,CAP,HX SKT 5_8IN-11,1-1_2IN LG,BLK",
+        }
+      ],
+      "vj8959": [
+        {
+          filename: "images/VJ8959 - WASHER,FLAT,5_8IN,HRDN,ZP.png",
+          caption: "WASHER,FLAT,5_8IN,HRDN,ZP",
+        }
+      ],
+      "6717753p1am": [
+        {
+          filename: "images/6717753P1AM - NUT,HEX,1 1_8IN-18 - 2.png",
+          caption: "NUT,HEX,1 1_8IN-18",
+          description: "Top View"
+        },
+        {
+          filename: "images/6717753P1AM - NUT,HEX,1 1_8IN-18.png",
+          caption: "NUT,HEX,1 1_8IN-18",
+          description: "Bottom View"
+        }
+      ],
+      "6704451p1am": [
+        {
+          filename: "images/6704451P1AM - LOCKWASHER.png",
+          caption: "LOCKWASHER",
+        }
+      ],
+      "415-6650": [
+        {
+          filename: "images/415-6650 - BRUSH,BOX.png",
+          caption: "BRUSH,BOX",
+          description: "View 1"
+        },
+        {
+          filename: "images/415-6650 - BRUSH,BOX - 2.png",
+          caption: "BRUSH,BOX",
+          description: "View 2"
+        },
+        {
+          filename: "images/415-6650 - BRUSH,BOX - 3.png",
+          caption: "BRUSH,BOX",
+          description: "View 3"
+        }
+      ],
+      "415-6647": [
+        {
+          filename: "images/415-6647 - BRUSH,DE7000.png",
+          caption: "BRUSH,DE7000",
+          description: "View 1"
+        },
+        {
+          filename: "images/415-6647 - BRUSH,DE7000 - 2.png",
+          caption: "BRUSH,DE7000",
+          description: "View 2"
+        }
+      ],
+      "414-2566": [
+        {
+          filename: "images/414-2566 - GASKET, RETAINER.png",
+          caption: "GASKET, RETAINER",
+        }
+      ],
+      "413-2228": [
+        {
+          filename: "images/413-2228 - GASKET, CARRIER.png",
+          caption: "GASKET, CARRIER",
+        }
+      ],
+      "409-0292": [
+        {
+          filename: "images/409-0292 - LOCKNUT,1_2.png",
+          caption: "LOCKNUT,1_2",
+          description: "View 1"
+        },
+        {
+          filename: "images/409-0292 - LOCKNUT,1_2 - 2.png",
+          caption: "LOCKNUT,1_2",
+          description: "View 2"
+        }
+      ],
+      "407-7699": [
+        {
+          filename: "images/407-7699 - TERMINAL,SQ.png",
+          caption: "TERMINAL,SQ",
+        }
+      ],
+      "406-8978": [
+        {
+          filename: "images/406-8978 - SEAL,OIL 5-1_2.png",
+          caption: "SEAL,OIL 5-1_2",
+          description: "View 1"
+        },
+        {
+          filename: "images/406-8978 - SEAL,OIL 5-1_2 - 2.png",
+          caption: "SEAL,OIL 5-1_2",
+          description: "View 2"
+        },
+        {
+          filename: "images/406-8978 - SEAL,OIL 5-1_2 - 3.png",
+          caption: "SEAL,OIL 5-1_2",
+          description: "View 3"
+        }
+      ],
+      "082-7222": [
+        {
+          filename: "images/082-7222 - BOLT 1_2.png",
+          caption: "BOLT 1_2",
+          description: "View 1"
+        },
+        {
+          filename: "images/082-7222 - BOLT 1_2 - 2.png",
+          caption: "BOLT 1_2",
+          description: "View 2"
+        }
+      ],
+      "081-0991": [
+        {
+          filename: "images/081-0991 - FLATWASHER, 1_2.png",
+          caption: "FLATWASHER, 1_2",
+        }
+      ],
+      "080-1181": [
+        {
+          filename: "images/080-1181 - LOCKWASHER, 1_2.png",
+          caption: "LOCKWASHER, 1_2",
+          description: "View 1"
+        },
+        {
+          filename: "images/080-1181 - LOCKWASHER, 1_2 - 2.png",
+          caption: "LOCKWASHER, 1_2",
+          description: "View 2"
+        }
+      ],
+      "41b539090p2": [
+        {
+          filename: "images/41B539090P2 - PLATE, TERITIARY, FRONT (BIG HOLES).png",
+          caption: "PLATE, TERITIARY, FRONT (BIG HOLES)",
+          description: "View 1"
+        },
+        {
+          filename: "images/41B539090P2 - PLATE, TERITIARY, FRONT (BIG HOLES) - 2.png",
+          caption: "PLATE, TERITIARY, FRONT (BIG HOLES)",
+          description: "View 2"
+        }
+      ],
+      "41b538384G9am": [
+        {
+          filename: "images/41B538384G9AM - CABLE ASSEMBLY F2 W_GLAND 267.5IN LG.png",
+          caption: "CABLE ASSEMBLY F2 W_GLAND 267.5IN LG",
+        }
+      ],
+      "41b538384G8am": [
+        {
+          filename: "images/41B538384G8AM - CABLE ASSEMBLY F1 W_GLAND.png",
+          caption: "CABLE ASSEMBLY F1 W_GLAND",
+        }
+      ],
+      "41b537660p21am": [
+        {
+          filename: "images/41B537660P21AM - WASHER,FLAT,1IN,HRDN,ZP EA 1 WASHER, FLAT.png",
+          caption: "WASHER,FLAT,1IN,HRDN,ZP EA 1 WASHER, FLAT",
+          description: "View 1"
+        },
+        {
+          filename: "images/WASHER,FLAT,1IN,HRDN,ZP EA 1 WASHER, FLAT - 2.png",
+          caption: "WASHER,FLAT,1IN,HRDN,ZP EA 1 WASHER, FLAT",
+          description: "View 2"
+        }
+      ],
+      "41b537660p9am": [
+        {
+          filename: "images/41B537660P9AM - WASHER,FLAT,5_8IN,NARROW,HRD,ZP.png",
+          caption: "WASHER,FLAT,5_8IN,NARROW,HRD,ZP",
+        }
+      ],
+      "41b537660p6": [
+        {
+          filename: "images/41B537660P6 - WASHER,FLAT,1_2IN,NARROW,HRDN,ZP.png",
+          caption: "WASHER,FLAT,1_2IN,NARROW,HRDN,ZP",
+        }
+      ],
+      "41a230085p2am": [
+        {
+          filename: "images/41A230085P2AM - WASHER, 1.109 IN ID, 3_4 IN OD.png",
+          caption: "WASHER, 1.109 IN ID, 3_4 IN OD",
+        }
+      ],
+    };
+
+    const form = document.getElementById('searchForm');
+    const input = document.getElementById('searchInput');
+    const resultsDiv = document.getElementById('results');
+    const container = document.getElementById('main-container');
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const query = input.value.trim().toLowerCase();
+      resultsDiv.innerHTML = '';
+
+      if (query === "") {
+        resultsDiv.textContent = "Please enter a part number.";
+        container.classList.remove('moved-up');
+        return;
+      }
+
+      container.classList.add('moved-up');
+
+      setTimeout(() => {
+        if (imageMap.hasOwnProperty(query)) {
+          imageMap[query].forEach(imageData => {
+            const figure = document.createElement('figure');
+            figure.classList.add('fade-in');
+
+            const img = document.createElement('img');
+            img.src = imageData.filename;
+            img.alt = imageData.caption;
+            img.className = 'part-image';
+            figure.appendChild(img);
+
+            const caption = document.createElement('figcaption');
+            caption.textContent = imageData.caption;
+            figure.appendChild(caption);
+
+            if (imageData.description) {
+              const desc = document.createElement('div');
+              desc.className = "description";
+              desc.textContent = imageData.description;
+              figure.appendChild(desc);
+            }
+
+            resultsDiv.appendChild(figure);
+          });
+        } else {
+          resultsDiv.textContent = `No images found for "${query}".`;
+        }
+      }, 400); // Wait slightly after search bar moves
+    });
+
+    input.addEventListener('input', () => {
+      if (input.value.trim() === "") {
+        container.classList.remove('moved-up');
+        resultsDiv.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
